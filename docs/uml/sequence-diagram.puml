@@ -1,0 +1,24 @@
+@startuml
+title Отправка уведомления и фиксация аудита
+
+actor Operator as "Сотрудник деканата"
+participant "NotificationService" as Service
+participant "Configuration" as Config
+participant "NotificationProvider" as Provider
+participant "NotificationAuditor" as Auditor
+
+Operator -> Service: send(request)
+Service -> Config: notificationProviderType(), auditEnabled()
+Config --> Service: channel="email", audit=true
+Service -> Provider: send(channel, recipient, text)
+Provider --> Service: success
+alt аудит включён
+  Service -> Auditor: record(sender, recipient, appealId, channel, result)
+end
+Service --> Operator: NotificationResult
+
+note right of Config
+Singleton-вариант получает Config глобально.
+DI-вариант получает Config через конструктор.
+end note
+@enduml
